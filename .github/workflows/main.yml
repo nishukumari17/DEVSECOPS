@@ -27,19 +27,19 @@ jobs:
     # Terraform Init (Docker)
     - name: Terraform Init
       run: |
-        docker run --rm \
-          -v ${{ github.workspace }}/terraform:/workspace \
-          -w /workspace \
-          hashicorp/terraform:1.6 \
+        docker run --rm 
+          -v ${{ github.workspace }}/terraform:/workspace 
+          -w /workspace 
+          hashicorp/terraform:1.6 
           terraform init
 
     # Terraform Plan (Docker)
     - name: Terraform Plan
       run: |
-        docker run --rm \
-          -v ${{ github.workspace }}/terraform:/workspace \
-          -w /workspace \
-          hashicorp/terraform:1.6 \
+        docker run --rm 
+          -v ${{ github.workspace }}/terraform:/workspace 
+          -w /workspace 
+          hashicorp/terraform:1.6 
           terraform plan
 
     # Build Docker Image
