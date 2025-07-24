@@ -1,0 +1,55 @@
+name: DevSecOps CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_NAME: my-app
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  devsecops:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Scan Terraform with tfsec (Docker)
+    - name: tfsec Scan
+      run: |
+        docker run --rm -v ${{ github.workspace }}/terraform:/src aquasec/tfsec /src
+
+    # Terraform Plan (Docker)
+    - name: Terraform Plan
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}/terraform:/workspace \
+          -w /workspace \
+          hashicorp/terraform:1.6 \
+          sh -c "terraform init && terraform plan -out=tfplan"
+
+    # Build Docker Image
+    - name: Build Docker Image
+      run: docker build -t $IMAGE_NAME:$IMAGE_TAG .
+
+    # Trivy Image Scan
+    - name: Trivy Scan
+      run: |
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity CRITICAL,HIGH $IMAGE_NAME:$IMAGE_TAG
+
+    # Set up kubeconfig
+    - name: Set up Kubeconfig
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" > kubeconfig
+        export KUBECONFIG=$PWD/kubeconfig
+
+    # Apply Sealed Secret
+    - name: Apply Sealed Secrets
+      run: kubectl apply -f manifests/sealed-secret.yaml
+
+    # Deploy App
+    - name: Deploy to Kubernetes
+      run: kubectl apply -f manifests/deployment.yaml
