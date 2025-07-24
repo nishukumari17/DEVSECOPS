@@ -2,7 +2,7 @@
   "name": "your-app-name",
   "version": "1.0.0",
   "dependencies": {
-    "cross-spawn": "7.0.5"
+    "cross-spawn": "^7.0.5"
   },
   "resolutions": {
     "cross-spawn": "7.0.5"
@@ -10,5 +10,8 @@
   "scripts": {
     "preinstall": "npx npm-force-resolutions",
     "start": "node index.js"
+  },
+  "devDependencies": {
+    "npm-force-resolutions": "^0.0.10"
   }
 }
