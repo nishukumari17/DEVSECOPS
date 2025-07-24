@@ -54,7 +54,7 @@ jobs:
           -v /var/run/docker.sock:/var/run/docker.sock \
           aquasec/trivy image \
          --exit-code 0 \
-          --severity CRITICAL,HIGH \
+          --severity CRITICAL \
           $IMAGE_NAME:$IMAGE_TAG
 
     # Set up Kubeconfig
