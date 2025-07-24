@@ -27,19 +27,19 @@ jobs:
     # Terraform Init (Docker)
     - name: Terraform Init
       run: |
-        docker run --rm 
-          -v ${{ github.workspace }}/terraform:/workspace 
-          -w /workspace 
-          hashicorp/terraform:1.6 
+        docker run --rm \
+          -v ${{ github.workspace }}/terraform:/workspace \
+          -w /workspace \
+          hashicorp/terraform:1.6 \
           terraform init
 
     # Terraform Plan (Docker)
     - name: Terraform Plan
       run: |
-        docker run --rm 
-          -v ${{ github.workspace }}/terraform:/workspace 
-          -w /workspace 
-          hashicorp/terraform:1.6 
+        docker run --rm \
+          -v ${{ github.workspace }}/terraform:/workspace \
+          -w /workspace \
+          hashicorp/terraform:1.6 \
           terraform plan
 
     # Build Docker Image
@@ -56,24 +56,27 @@ jobs:
           --exit-code 1 --severity CRITICAL,HIGH \
           $IMAGE_NAME:$IMAGE_TAG
 
-    # Set up kubeconfig
+    # Set up Kubeconfig
     - name: Set up Kubeconfig
       run: |
-        echo "${{ secrets.KUBECONFIG }}" > kubeconfig
-        export KUBECONFIG=$PWD/kubeconfig
+        echo "${{ secrets.KUBECONFIG }}" > ${{ github.workspace }}/kubeconfig
 
     # Apply Sealed Secrets (with kubectl inside Docker)
     - name: Apply Sealed Secrets
+      env:
+        KUBECONFIG: ${{ github.workspace }}/kubeconfig
       run: |
         docker run --rm \
           -v ${{ github.workspace }}/manifests:/manifests \
-          -v $PWD/kubeconfig:/root/.kube/config \
+          -v ${{ github.workspace }}/kubeconfig:/root/.kube/config \
           bitnami/kubectl:latest apply -f /manifests/sealed-secret.yaml
 
     # Deploy App (with kubectl inside Docker)
     - name: Deploy to Kubernetes
+      env:
+        KUBECONFIG: ${{ github.workspace }}/kubeconfig
       run: |
         docker run --rm \
           -v ${{ github.workspace }}/manifests:/manifests \
-          -v $PWD/kubeconfig:/root/.kube/config \
+          -v ${{ github.workspace }}/kubeconfig:/root/.kube/config \
           bitnami/kubectl:latest apply -f /manifests/deployment.yaml
